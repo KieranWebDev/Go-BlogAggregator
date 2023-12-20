@@ -1,5 +1,6 @@
 package main
 
+// postgres driver
 import _ "github.com/lib/pq"
 
 import (
@@ -19,6 +20,7 @@ type apiConfig struct {
 }
 
 func main() {
+	// Load .env file
 	godotenv.Load(".env")
 
 	port := os.Getenv("PORT")
@@ -30,7 +32,7 @@ func main() {
 	if dbURL == "" {
 		log.Fatal("DB_URL environment variable is not set")
 	}
-
+	//connect to database
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatal("cant connect to database", err)
@@ -42,6 +44,7 @@ func main() {
 
 	router := chi.NewRouter()
 
+	// CORS
 	router.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},

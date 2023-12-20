@@ -14,6 +14,7 @@ func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, req *http.Requ
 	type parameters struct {
 		Name string `json:"name"`
 	}
+
 	decoder := json.NewDecoder(req.Body)
 
 	params := parameters{}
@@ -31,6 +32,6 @@ func (apiCfg *apiConfig) handlerCreateUser(w http.ResponseWriter, req *http.Requ
 	if err != nil {
 		respondWithError(w, 400, "error creating user")
 	}
-
-	respondWithJSON(w, http.StatusOK, user)
+	configuredUser := databaseUserToUser(user)
+	respondWithJSON(w, http.StatusOK, configuredUser)
 }
