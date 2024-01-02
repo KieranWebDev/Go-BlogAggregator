@@ -20,7 +20,6 @@ type apiConfig struct {
 }
 
 func main() {
-	// Load .env file
 	godotenv.Load(".env")
 
 	port := os.Getenv("PORT")
@@ -28,23 +27,23 @@ func main() {
 		log.Fatal("PORT environment variable is not set")
 	}
 
-	dbURL := os.Getenv("DB_URL")
+	dbURL := os.Getenv("DATABASE_URL")
 	if dbURL == "" {
-		log.Fatal("DB_URL environment variable is not set")
-	}
-	//connect to database
-	db, err := sql.Open("postgres", dbURL)
-	if err != nil {
-		log.Fatal("cant connect to database", err)
+		log.Fatal("DATABASE_URL environment variable is not set")
 	}
 
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		log.Fatal(err)
+	}
+	dbQueries := database.New(db)
+
 	apiCfg := apiConfig{
-		DB: database.New(db),
+		DB: dbQueries,
 	}
 
 	router := chi.NewRouter()
 
-	// CORS
 	router.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -55,9 +54,12 @@ func main() {
 	}))
 
 	v1Router := chi.NewRouter()
+
+	v1Router.Post("/users", apiCfg.handlerUsersCreate)
+	v1Router.Get("/users", apiCfg.handlerUsersGet)
+
 	v1Router.Get("/healthz", handlerReadiness)
 	v1Router.Get("/err", handlerErr)
-	v1Router.Post("/users", apiCfg.handlerCreateUser)
 
 	router.Mount("/v1", v1Router)
 	srv := &http.Server{
@@ -66,6 +68,5 @@ func main() {
 	}
 
 	log.Printf("Serving on port: %s\n", port)
-	srv.ListenAndServe()
-	// log.Fatal(srv.ListenAndServe())
+	log.Fatal(srv.ListenAndServe())
 }
